@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import cors from "cors";
 import bodyParser from "body-parser";
 import mongoose from "mongoose";
+import userRouter from "./routes/userRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -20,6 +21,8 @@ mongoose
   .catch(() => {
     console.log("Conection Filed!");
   });
+
+app.use("/api/users/", userRouter);
 
 app.listen(5000, (req, res) => {
   console.log("Sever is runing on the port 5000");
