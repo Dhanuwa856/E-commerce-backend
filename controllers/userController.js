@@ -1,5 +1,6 @@
 import argon2 from "argon2";
 import User from "../models/user.js";
+import jwt from "jsonwebtoken";
 
 // Create User
 export async function createUser(req, res) {
@@ -19,3 +20,95 @@ export async function createUser(req, res) {
     res.status(400).json({ message: err.message });
   }
 }
+
+// get all users
+export async function getUsers(req, res) {
+  try {
+    const users = await User.find();
+    res.status(200).json(users);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+}
+
+// User login
+export async function loginUser(req, res) {
+  const { input, password } = req.body;
+
+  try {
+    const query = input.includes("@") ? { email: input } : { userName: input };
+
+    const user = await User.findOne(query);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Compare the provided password with the hashed password
+    const isMatch = await argon2.verify(user.password, password);
+
+    if (!isMatch) {
+      return res.status(400).json({
+        message: "Invalid password",
+      });
+    }
+
+    const payLoad = {
+      email: user.email,
+      userName: user.userName,
+      disabled: user.disabled,
+      type: user.type,
+      emailVerified: user.emailVerified,
+      image: user.image,
+    };
+
+    // Generate JWT token
+    const token = jwt.sign(payLoad, process.env.JWT_KEY);
+
+    res.json({
+      message: "User authenticated successfully",
+      token,
+    });
+  } catch (err) {
+    console.log("Error logging in", err.message);
+    res.status(500).json({ message: "sever error while loggging in" });
+  }
+}
+
+// Middleware to check if the user is logged in
+export const checkLoggedIn = (req, res, next) => {
+  const user = req.user;
+
+  if (!user) {
+    return res.status(403).json({
+      message: "Please LogIn",
+    });
+  }
+  next(); // Proceed to the next middleware or controller function
+};
+
+// Middleware to check if the user is an admin
+export const checkAdmin = (req, res, next) => {
+  const user = req.user;
+
+  if (user?.type !== "admin") {
+    return res.status(403).json({
+      message: "You do not have permission to perform this action",
+    });
+  }
+
+  next(); // Proceed if the user is an admin
+};
+
+// Middleware to check if the user is an customer
+export const checkCustomer = (req, res, next) => {
+  const user = req.user;
+
+  if (user?.type !== "customer") {
+    return res.status(403).json({
+      message: "You do not have permission to perform this action",
+    });
+  }
+
+  next(); // Proceed if the user is an customer
+};
