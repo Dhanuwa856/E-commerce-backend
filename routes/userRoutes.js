@@ -1,5 +1,7 @@
 import express from "express";
 import {
+  checkAdmin,
+  checkLoggedIn,
   createUser,
   getUsers,
   loginUser,
@@ -7,7 +9,7 @@ import {
 
 const userRouter = express.Router();
 userRouter.post("/", createUser);
-userRouter.get("/", getUsers);
+userRouter.get("/", checkLoggedIn, checkAdmin, getUsers);
 userRouter.post("/login", loginUser);
 
 export default userRouter;

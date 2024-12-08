@@ -112,3 +112,17 @@ export const checkCustomer = (req, res, next) => {
 
   next(); // Proceed if the user is an customer
 };
+
+export const checkEmailVerified = (req, res, next) => {
+  const user = req.user;
+
+  // Check if the user's email is verified
+  if (!user.emailVerified) {
+    return res.status(403).json({
+      message:
+        "Your email is not verified. Please verify your email to proceed.",
+    });
+  }
+
+  next(); // Proceed if the user's email is verified
+};
