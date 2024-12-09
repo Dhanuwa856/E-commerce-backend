@@ -113,6 +113,7 @@ export const checkCustomer = (req, res, next) => {
   next(); // Proceed if the user is an customer
 };
 
+// Middleware to check if the user is an verified the email
 export const checkEmailVerified = (req, res, next) => {
   const user = req.user;
 
