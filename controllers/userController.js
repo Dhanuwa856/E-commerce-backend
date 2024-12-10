@@ -127,3 +127,37 @@ export const checkEmailVerified = (req, res, next) => {
 
   next(); // Proceed if the user's email is verified
 };
+
+export const disableAndChangeUserType = async (req, res) => {
+  const { userEmail } = req.params; // Get the user ID from URL params
+  const { type, disabled } = req.body; // Get type and disabled status from the request body
+
+  try {
+    // Find the user by ID
+    const user = await User.findOne({ email: userEmail });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Update the user's type if provided
+    if (type) {
+      user.type = type;
+    }
+
+    // Update the disabled status if provided
+    if (typeof disabled === "boolean") {
+      user.disabled = disabled;
+    }
+
+    // Save the updated user
+    const updatedUser = await user.save();
+
+    res.status(200).json({
+      message: "User updated successfully",
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error("Error updating user:", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
