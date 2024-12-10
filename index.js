@@ -6,6 +6,7 @@ import bodyParser from "body-parser";
 import mongoose from "mongoose";
 import userRouter from "./routes/userRoutes.js";
 import categoryRouter from "./routes/categoryRoutes.js";
+import productRouter from "./routes/productRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -42,6 +43,7 @@ mongoose
 
 app.use("/api/users/", userRouter);
 app.use("/api/category/", categoryRouter);
+app.use("/api/product/", productRouter);
 
 app.listen(5000, (req, res) => {
   console.log("Sever is runing on the port 5000");

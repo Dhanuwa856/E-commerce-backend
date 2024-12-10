@@ -1,4 +1,5 @@
 import Category from "../models/category.js";
+import Product from "../models/product.js";
 
 // Create a new category
 export const crateCategory = async (req, res) => {
@@ -75,6 +76,87 @@ export const deleteCategory = async (req, res) => {
 
     await category.deleteOne();
     res.status(200).json({ message: "Category deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// update offer percentage
+export const updateCategoryOffer = async (req, res) => {
+  const { categoryName } = req.params;
+  const { offer_percentage } = req.body;
+
+  try {
+    // Validate the offer percentage
+    if (offer_percentage < 0 || offer_percentage > 100) {
+      return res
+        .status(400)
+        .json({ message: "Offer percentage must be between 0 and 100" });
+    }
+
+    // Find the category
+    const category = await Category.findOne({ name: categoryName });
+    if (!category) {
+      return res.status(404).json({ message: "Category not found" });
+    }
+
+    // Update the category's offer_percentage
+    category.offer_percentage = offer_percentage;
+    await category.save();
+
+    // Update all products in the same category
+    const result = await Product.updateMany(
+      { category: categoryName },
+      { $set: { offer_percentage } }
+    );
+
+    res.status(200).json({
+      message: `Offer updated for category '${categoryName}' and applied to ${result.nModified} product(s)`,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const adjustCategoryPrices = async (req, res) => {
+  const { categoryName } = req.params;
+  const { adjustmentPercentage } = req.body; // Positive or negative percentage
+
+  try {
+    // Find the category
+    const category = await Category.findOne({ name: categoryName });
+    if (!category) {
+      return res.status(404).json({ message: "Category not found" });
+    }
+
+    // Optional: Save the adjustment percentage in the category model
+    category.price_adjustment = adjustmentPercentage;
+    await category.save();
+
+    // Calculate adjustment factor
+    const adjustmentFactor = 1 + adjustmentPercentage / 100;
+
+    // Fetch all products in the category
+    const products = await Product.find({ category: categoryName });
+
+    // Update each product's price with rounding
+    let updatedCount = 0;
+    for (const product of products) {
+      const newPrice = parseFloat(
+        (product.price * adjustmentFactor).toFixed(2)
+      ); // Calculate and round
+      if (newPrice !== product.price) {
+        // Check if the price is actually changing
+        product.price = newPrice; // Update the price
+        await product.save(); // Save the updated product
+        updatedCount++;
+      }
+    }
+
+    res.status(200).json({
+      message: `Prices in the ${categoryName} category adjusted by ${adjustmentPercentage}%`,
+      updatedCount,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
