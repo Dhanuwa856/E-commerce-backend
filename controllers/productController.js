@@ -1,5 +1,6 @@
 import Product from "../models/product.js";
 
+// create new product
 export const createProduct = async (req, res) => {
   const {
     name,
@@ -51,12 +52,83 @@ export const createProduct = async (req, res) => {
 };
 
 // get all product
-
 export const getProducts = async (req, res) => {
   try {
     const products = await Product.find();
     res.status(200).json(products);
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+// get latest product 10
+export const getLatestProducts = async (req, res) => {
+  try {
+    // Fetch the 10 most recently added products
+    const latestProducts = await Product.find()
+      .sort({ createdAt: -1 }) // Sort by createdAt in descending order
+      .limit(10); // Limit to 10 results
+
+    res.status(200).json({
+      message: "Successfully fetched the latest products",
+      products: latestProducts,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to fetch the latest products",
+      error: error.message,
+    });
+  }
+};
+
+// get product by category
+export const getProductsByCategory = async (req, res) => {
+  const { categoryName } = req.params;
+  const { pageSize = 10, pageNumber = 1 } = req.query; // Default values if not provided
+
+  try {
+    let productsQuery;
+
+    if (categoryName === "All") {
+      // Fetch all products
+      productsQuery = Product.find({});
+    } else {
+      // Fetch products specific to the category
+      productsQuery = Product.find({ category: categoryName });
+    }
+
+    // Convert pageSize and pageNumber to integers
+    const size = parseInt(pageSize, 10);
+    const page = parseInt(pageNumber, 10);
+
+    // Calculate total products and apply pagination
+    const totalProducts = await productsQuery.clone().countDocuments();
+    const products = await productsQuery.skip((page - 1) * size).limit(size);
+
+    if (products.length === 0) {
+      return res.status(404).json({
+        message:
+          categoryName === "All"
+            ? "No products found."
+            : `No products found in the ${categoryName} category.`,
+      });
+    }
+
+    res.status(200).json({
+      message:
+        categoryName === "All"
+          ? "Successfully fetched all products."
+          : `Successfully fetched products in the ${categoryName} category.`,
+      pageNumber: page,
+      pageSize: size,
+      totalProducts: totalProducts,
+      totalPages: Math.ceil(totalProducts / size),
+      products: products,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to fetch products",
+      error: error.message,
+    });
   }
 };
