@@ -43,7 +43,7 @@ mongoose
 
 app.use("/api/users/", userRouter);
 app.use("/api/category/", categoryRouter);
-app.use("/api/product/", productRouter);
+app.use("/api/products/", productRouter);
 
 app.listen(5000, (req, res) => {
   console.log("Sever is runing on the port 5000");

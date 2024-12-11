@@ -132,3 +132,59 @@ export const getProductsByCategory = async (req, res) => {
     });
   }
 };
+
+// update product by id
+export const updateProductById = async (req, res) => {
+  const { productId } = req.params; // Extract product ID from URL parameters
+  const updateData = req.body; // Extract update data from request body
+
+  try {
+    // Check if the product exists
+    const product = await Product.findOne({ product_id: productId });
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Update the product with the provided data
+    const updatedProduct = await Product.findOneAndUpdate(
+      { product_id: productId }, // Query to find product by product_id
+      { $set: updateData }, // Set the updated fields
+      { new: true, runValidators: true } // Return updated document and validate
+    );
+
+    res.status(200).json({
+      message: "Product updated successfully.",
+      product: updatedProduct,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Failed to update the product.",
+      error: err.message,
+    });
+  }
+};
+
+// delete prodct by id
+export const deleteProductById = async (req, res) => {
+  const { productId } = req.params;
+
+  try {
+    // Check if the product exists
+    const product = await Product.findOne({ product_id: productId });
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Delete the product
+    await Product.deleteOne({ product_id: productId });
+
+    res.status(200).json({
+      message: "Product deleted successfully.",
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Failed to delete the product.",
+      error: err.message,
+    });
+  }
+};
