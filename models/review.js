@@ -2,6 +2,10 @@ import mongoose from "mongoose";
 
 const reviewSchema = mongoose.Schema(
   {
+    review_id: {
+      type: Number,
+      required: true,
+    },
     product_id: {
       type: Number,
       required: true,
