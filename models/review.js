@@ -7,11 +7,21 @@ const reviewSchema = mongoose.Schema(
       required: true,
       ref: "Product", // Reference to the Product model
     },
-    user: {
+    user_name: {
       type: String,
       required: true,
       trim: true,
     },
+    user_image: {
+      type: String,
+      required: true,
+    },
+    product_images: [
+      {
+        type: String,
+        required: false,
+      },
+    ],
     rating: {
       type: Number,
       required: true,
