@@ -8,6 +8,9 @@ import userRouter from "./routes/userRoutes.js";
 import categoryRouter from "./routes/categoryRoutes.js";
 import productRouter from "./routes/productRoutes.js";
 import reviewRouter from "./routes/reviewRoutes.js";
+import orderRouter from "./routes/orderRoutes.js";
+import addressRouter from "./routes/userAddressRoutes.js";
+import orderListRouter from "./routes/orderListRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -46,6 +49,9 @@ app.use("/api/users/", userRouter);
 app.use("/api/category/", categoryRouter);
 app.use("/api/products/", productRouter);
 app.use("/api/reviews/", reviewRouter);
+app.use("/api/orders/", orderRouter);
+app.use("/api/user-address/", addressRouter);
+app.use("/api/order-list", orderListRouter);
 
 app.listen(5000, (req, res) => {
   console.log("Sever is runing on the port 5000");

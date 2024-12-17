@@ -118,6 +118,7 @@ export const updateCategoryOffer = async (req, res) => {
   }
 };
 
+// adjust price by category
 export const adjustCategoryPrices = async (req, res) => {
   const { categoryName } = req.params;
   const { adjustmentPercentage } = req.body; // Positive or negative percentage

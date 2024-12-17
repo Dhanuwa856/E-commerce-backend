@@ -53,13 +53,30 @@ export const createReview = async (req, res) => {
   }
 };
 
-// get all review
+// Get all reviews with pagination
 export const getAllReviews = async (req, res) => {
+  const { page = 1, limit = 10 } = req.query; // Default to page 1, 10 reviews per page
+
   try {
-    const reviews = await Review.find();
-    res.status(200).json(reviews);
+    // Calculate the total number of reviews
+    const totalReviews = await Review.countDocuments();
+
+    // Fetch the reviews for the specified page
+    const reviews = await Review.find()
+      .skip((page - 1) * limit) // Skip reviews for previous pages
+      .limit(parseInt(limit)) // Limit the number of reviews for the current page
+      .sort({ createdAt: -1 }); // Sort reviews by most recent
+
+    res.status(200).json({
+      totalReviews,
+      currentPage: parseInt(page),
+      totalPages: Math.ceil(totalReviews / limit),
+      reviews,
+    });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res
+      .status(500)
+      .json({ message: "Failed to fetch reviews.", error: err.message });
   }
 };
 
