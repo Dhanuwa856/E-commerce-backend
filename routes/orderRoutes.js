@@ -2,6 +2,8 @@ import express from "express";
 import {
   createOrder,
   getAllOrders,
+  getChartData,
+  getDashboardMetrics,
   getOrdersByEmail,
   updateOrderStatus,
 } from "../controllers/orderController.js";
@@ -16,9 +18,9 @@ const orderRouter = express.Router();
 
 orderRouter.post(
   "/",
-  checkLoggedIn,
-  checkCustomer,
-  checkEmailVerified,
+  // checkLoggedIn,
+  // checkCustomer,
+  // checkEmailVerified,
   createOrder
 );
 orderRouter.get(
@@ -34,5 +36,7 @@ orderRouter.put(
   checkAdmin,
   updateOrderStatus
 );
+orderRouter.get("/dashboard-metrics", getDashboardMetrics);
+orderRouter.get("/get-dash-chart", getChartData);
 
 export default orderRouter;

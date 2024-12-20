@@ -1,4 +1,6 @@
 import Order from "../models/order.js";
+import Product from "../models/product.js";
+import moment from "moment";
 
 // Create order
 export const createOrder = async (req, res) => {
@@ -157,5 +159,127 @@ export const updateOrderStatus = async (req, res) => {
       message: "Failed to update order status.",
       error: error.message,
     });
+  }
+};
+
+// get dashboard data
+export const getDashboardMetrics = async (req, res) => {
+  try {
+    // Get today's date range (start and end of the day)
+    const startOfDay = moment().startOf("day").toDate();
+    const endOfDay = moment().endOf("day").toDate();
+
+    // Get the total product count
+    const productCount = await Product.countDocuments();
+
+    // Count the number of orders placed today
+    const ordersToday = await Order.countDocuments({
+      ordered_at: { $gte: startOfDay, $lt: endOfDay },
+    });
+
+    // Calculate total revenue from delivered orders
+    const totalRevenueData = await Order.aggregate([
+      { $match: { order_status: "Delivered" } }, // Filter only "Delivered" orders
+      { $group: { _id: null, totalRevenue: { $sum: "$total_price" } } },
+    ]);
+    const totalRevenue = totalRevenueData[0]?.totalRevenue
+      ? Math.round(totalRevenueData[0].totalRevenue)
+      : 0; // Round to the nearest whole number
+
+    // Return the combined metrics as a response
+    res.status(200).json({
+      productCount,
+      ordersToday,
+      totalRevenue,
+    });
+  } catch (error) {
+    console.error("Error fetching dashboard metrics: ", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+// getdashboard chart data
+export const getChartData = async (req, res) => {
+  try {
+    const currentDate = moment(); // Get the current date
+    const sixMonthsAgo = currentDate.clone().subtract(5, "months"); // Calculate six months ago
+
+    // Sales Data for Line Chart (Last 6 Months)
+    const salesData = await Order.aggregate([
+      {
+        $match: {
+          order_status: "Delivered",
+          ordered_at: {
+            $gte: sixMonthsAgo.toDate(), // Include orders from 6 months ago
+            $lte: currentDate.toDate(), // Up to the current date
+          },
+        },
+      },
+      {
+        $group: {
+          _id: { $month: "$ordered_at" }, // Group by month
+          totalSales: { $sum: "$total_price" },
+        },
+      },
+      { $sort: { _id: 1 } }, // Sort by month
+    ]);
+
+    const salesByMonth = Array(6).fill(0); // Initialize an array for 6 months
+    salesData.forEach((entry) => {
+      const monthIndex =
+        currentDate.clone().subtract(5, "months").month() + entry._id - 1;
+      if (monthIndex >= 0 && monthIndex < 6) {
+        salesByMonth[monthIndex] = entry.totalSales;
+      }
+    });
+
+    // Order Status for Bar Chart
+    const orderStatusData = await Order.aggregate([
+      {
+        $group: {
+          _id: "$order_status",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const orderStatusCounts = {
+      Pending: 0,
+      Shipped: 0,
+      Canceled: 0,
+      Delivered: 0,
+    };
+
+    orderStatusData.forEach((entry) => {
+      orderStatusCounts[entry._id] = entry.count;
+    });
+
+    // Category Performance for Doughnut Chart
+    const categoryPerformanceData = await Product.aggregate([
+      {
+        $group: {
+          _id: "$category",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const categories = [];
+    const categoryCounts = [];
+    categoryPerformanceData.forEach((entry) => {
+      categories.push(entry._id);
+      categoryCounts.push(entry.count);
+    });
+
+    // Send data to frontend
+    res.status(200).json({
+      sales: salesByMonth, // Return data for the last 6 months
+      orderStatus: Object.values(orderStatusCounts),
+      categories,
+      categoryCounts,
+    });
+  } catch (error) {
+    console.error("Error fetching chart data: ", error);
+    res.status(500).json({ message: "Failed to fetch chart data" });
   }
 };
