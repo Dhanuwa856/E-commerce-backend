@@ -5,6 +5,7 @@ import {
   getChartData,
   getDashboardMetrics,
   getOrdersByEmail,
+  getTopOrderedProducts,
   updateOrderStatus,
 } from "../controllers/orderController.js";
 import {
@@ -38,5 +39,6 @@ orderRouter.put(
 );
 orderRouter.get("/dashboard-metrics", getDashboardMetrics);
 orderRouter.get("/get-dash-chart", getChartData);
+orderRouter.get("/top-ordered-products", getTopOrderedProducts);
 
 export default orderRouter;

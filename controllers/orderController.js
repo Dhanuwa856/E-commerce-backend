@@ -283,3 +283,42 @@ export const getChartData = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch chart data" });
   }
 };
+
+// get top selling products
+export const getTopOrderedProducts = async (req, res) => {
+  try {
+    // Step 1: Aggregate orders to count product occurrences
+    const topProducts = await Order.aggregate([
+      { $unwind: "$products" }, // Deconstruct the products array
+      {
+        $group: {
+          _id: "$products.product_id", // Group by product_id
+          totalOrders: { $sum: "$products.quantity" }, // Sum the quantities ordered
+        },
+      },
+      { $sort: { totalOrders: -1 } }, // Sort by totalOrders in descending order
+      { $limit: 4 }, // Limit to 4 results
+    ]);
+
+    // Step 2: Retrieve product details for the top products
+    const productDetails = await Product.find({
+      product_id: { $in: topProducts.map((item) => item._id) },
+    });
+
+    // Map order count to the product details
+    const results = productDetails.map((product) => {
+      const productData = topProducts.find(
+        (item) => item._id === product.product_id
+      );
+      return {
+        ...product.toObject(),
+        totalOrders: productData?.totalOrders || 0,
+      };
+    });
+
+    res.status(200).json(results);
+  } catch (error) {
+    console.error("Error retrieving top ordered products:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};

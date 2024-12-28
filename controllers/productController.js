@@ -61,13 +61,13 @@ export const getProducts = async (req, res) => {
   }
 };
 
-// get latest product 10
+// get latest product 8
 export const getLatestProducts = async (req, res) => {
   try {
-    // Fetch the 10 most recently added products
+    // Fetch the 8 most recently added products
     const latestProducts = await Product.find()
       .sort({ createdAt: -1 }) // Sort by createdAt in descending order
-      .limit(10); // Limit to 10 results
+      .limit(8); // Limit to 8 results
 
     res.status(200).json({
       message: "Successfully fetched the latest products",

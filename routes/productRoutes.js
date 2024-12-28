@@ -7,7 +7,11 @@ import {
   getProductsByCategory,
   updateProductById,
 } from "../controllers/productController.js";
-import { checkAdmin, checkLoggedIn } from "../controllers/userController.js";
+import {
+  checkAdmin,
+  checkCustomer,
+  checkLoggedIn,
+} from "../controllers/userController.js";
 
 const productRouter = experss.Router();
 
