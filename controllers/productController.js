@@ -83,7 +83,7 @@ export const getLatestProducts = async (req, res) => {
 
 // get product by category
 export const getProductsByCategory = async (req, res) => {
-  const { categoryName } = req.params;
+  const { categoryName } = req.query;
   const { pageSize = 10, pageNumber = 1 } = req.query; // Default values if not provided
 
   try {

@@ -4,6 +4,7 @@ import {
   crateCategory,
   deleteCategory,
   getCategories,
+  getCategoryByName,
   updateCategory,
   updateCategoryOffer,
 } from "../controllers/categoryController.js";
@@ -27,5 +28,6 @@ categoryRouter.post(
   checkAdmin,
   adjustCategoryPrices
 );
+categoryRouter.get("/category-name/", getCategoryByName);
 
 export default categoryRouter;

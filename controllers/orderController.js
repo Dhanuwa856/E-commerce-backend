@@ -297,7 +297,7 @@ export const getTopOrderedProducts = async (req, res) => {
         },
       },
       { $sort: { totalOrders: -1 } }, // Sort by totalOrders in descending order
-      { $limit: 4 }, // Limit to 4 results
+      { $limit: 8 }, // Limit to 4 results
     ]);
 
     // Step 2: Retrieve product details for the top products

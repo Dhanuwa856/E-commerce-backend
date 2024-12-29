@@ -162,3 +162,24 @@ export const adjustCategoryPrices = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// get category by category name
+export const getCategoryByName = async (req, res) => {
+  const { name } = req.query; // Get the category name from query parameters
+
+  try {
+    // Validate if the name query is provided
+    if (!name) {
+      return res.status(400).json({ message: "Category name is required" });
+    }
+
+    const category = await Category.findOne({ name: name }); // Find the category by name
+    if (!category) {
+      return res.status(404).json({ message: "Category not found" });
+    }
+
+    res.status(200).json(category);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
