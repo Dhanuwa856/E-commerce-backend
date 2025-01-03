@@ -3,6 +3,7 @@ import {
   createProduct,
   deleteProductById,
   getLatestProducts,
+  getProductById,
   getProducts,
   getProductsByCategory,
   updateProductById,
@@ -26,5 +27,6 @@ productRouter.delete(
   checkAdmin,
   deleteProductById
 );
+productRouter.get("/:productId", getProductById);
 
 export default productRouter;

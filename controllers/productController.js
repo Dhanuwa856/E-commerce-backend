@@ -81,53 +81,67 @@ export const getLatestProducts = async (req, res) => {
   }
 };
 
-// get product by category
+// get products with filters
 export const getProductsByCategory = async (req, res) => {
-  const { categoryName } = req.query;
-  const { pageSize = 10, pageNumber = 1 } = req.query; // Default values if not provided
+  const {
+    categoryName = "All",
+    pageSize = 10,
+    pageNumber = 1,
+    priceRange,
+    sortBy,
+    searchTerm,
+  } = req.query;
 
   try {
-    let productsQuery;
+    const filters = {};
 
-    if (categoryName === "All") {
-      // Fetch all products
-      productsQuery = Product.find({});
-    } else {
-      // Fetch products specific to the category
-      productsQuery = Product.find({ category: categoryName });
+    // Apply category filter
+    if (categoryName !== "All") {
+      filters.category = categoryName;
     }
 
-    // Convert pageSize and pageNumber to integers
+    // Apply price range filter
+    if (priceRange) {
+      const [minPrice, maxPrice] = priceRange.split("-").map(Number);
+      filters.price = { $gte: minPrice, $lte: maxPrice };
+    }
+
+    // Apply search filter
+    if (searchTerm) {
+      filters.$or = [
+        { name: { $regex: searchTerm, $options: "i" } },
+        { description: { $regex: searchTerm, $options: "i" } },
+      ];
+    }
+
     const size = parseInt(pageSize, 10);
     const page = parseInt(pageNumber, 10);
 
-    // Calculate total products and apply pagination
+    // Define sorting options
+    const sortOptions = {
+      PriceLowHigh: { price: 1 },
+      PriceHighLow: { price: -1 },
+      Newest: { createdAt: -1 },
+      TopRated: { ratings: -1 },
+    };
+
+    const productsQuery = Product.find(filters).sort(sortOptions[sortBy] || {});
+
     const totalProducts = await productsQuery.clone().countDocuments();
     const products = await productsQuery.skip((page - 1) * size).limit(size);
 
-    if (products.length === 0) {
-      return res.status(404).json({
-        message:
-          categoryName === "All"
-            ? "No products found."
-            : `No products found in the ${categoryName} category.`,
-      });
-    }
-
     res.status(200).json({
-      message:
-        categoryName === "All"
-          ? "Successfully fetched all products."
-          : `Successfully fetched products in the ${categoryName} category.`,
+      message: "Products fetched successfully.",
+      filtersApplied: { categoryName, priceRange, sortBy, searchTerm },
       pageNumber: page,
       pageSize: size,
-      totalProducts: totalProducts,
+      totalProducts,
       totalPages: Math.ceil(totalProducts / size),
-      products: products,
+      products,
     });
   } catch (error) {
     res.status(500).json({
-      message: "Failed to fetch products",
+      message: "Error fetching products.",
       error: error.message,
     });
   }
@@ -186,5 +200,25 @@ export const deleteProductById = async (req, res) => {
       message: "Failed to delete the product.",
       error: err.message,
     });
+  }
+};
+
+// Get product details by product_id
+export const getProductById = async (req, res) => {
+  try {
+    const { productId } = req.params; // Extract product_id from request parameters
+
+    // Find the product with the matching product_id
+    const product = await Product.findOne({ product_id: productId });
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Return the product details
+    res.status(200).json(product);
+  } catch (error) {
+    console.error("Error fetching product:", error);
+    res.status(500).json({ message: "Server error, please try again later" });
   }
 };
